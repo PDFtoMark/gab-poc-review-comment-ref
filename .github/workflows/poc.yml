@@ -10,27 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Probe workspace provenance
-        env:
-          EV: ${{ toJSON(github.event) }}
+        with: {fetch-depth: 0, persist-credentials: false}
+      - name: Variant marker
         run: |
-          {
-            echo "event=$GITHUB_EVENT_NAME"
-            echo "ref=$GITHUB_REF"
-            echo "sha=$GITHUB_SHA"
-            echo "workflow-file-sha: (files below are from the checked out tree)"
-            echo "--- comment.author_association (expr) ---"
-            echo "${{ github.event.comment.author_association }}"
-            echo "--- comment.user.login (expr) ---"
-            echo "${{ github.event.comment.user.login }}"
-            echo "--- payload: keys of comment ---"
-            echo "$EV" | jq -r '.comment | {author_association, user: .user.login, id}'
-            echo "--- payload: has issue? ---"
-            echo "$EV" | jq -r '{has_issue: has("issue"), has_pull_request: has("pull_request"), action: .action}'
-            echo "--- checked out hook content ---"
-            cat .claude/hooks/no-pipe-test-output.sh
-            if [ -f from_pr_head.txt ]; then echo "MARKER_PRESENT"; fi
-          } | tee out.txt
+          echo "VARIANT=main-v3"
+          echo "ref=$GITHUB_REF sha=$GITHUB_SHA"
+          echo "assoc=${{ github.event.comment.author_association }} actor=${{ github.actor }}"
+          cat .claude/hooks/no-pipe-test-output.sh
+          ls -1 from_pr_head.txt 2>/dev/null || echo no-marker
