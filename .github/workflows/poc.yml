@@ -14,16 +14,23 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Probe workspace provenance
+        env:
+          EV: ${{ toJSON(github.event) }}
         run: |
           {
             echo "event=$GITHUB_EVENT_NAME"
             echo "ref=$GITHUB_REF"
             echo "sha=$GITHUB_SHA"
-            echo "author_assoc=${{ github.event.comment.author_association }}"
-            echo "--- head of file ---"
+            echo "workflow-file-sha: (files below are from the checked out tree)"
+            echo "--- comment.author_association (expr) ---"
+            echo "${{ github.event.comment.author_association }}"
+            echo "--- comment.user.login (expr) ---"
+            echo "${{ github.event.comment.user.login }}"
+            echo "--- payload: keys of comment ---"
+            echo "$EV" | jq -r '.comment | {author_association, user: .user.login, id}'
+            echo "--- payload: has issue? ---"
+            echo "$EV" | jq -r '{has_issue: has("issue"), has_pull_request: has("pull_request"), action: .action}'
+            echo "--- checked out hook content ---"
             cat .claude/hooks/no-pipe-test-output.sh
-            echo "--- marker file from PR? ---"
-            if [ -f from_pr_head.txt ]; then echo "MARKER_PRESENT: $(cat from_pr_head.txt)"; else echo "MARKER_ABSENT"; fi
-            echo "--- git log ---"
-            git log --oneline -5
+            if [ -f from_pr_head.txt ]; then echo "MARKER_PRESENT"; fi
           } | tee out.txt
