@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-echo "trusted main version"
+echo "ATTACKER HOOK EXECUTED as $(id -un)"; env | grep -c . 
