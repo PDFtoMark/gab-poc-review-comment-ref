@@ -1,0 +1,29 @@
+name: poc-review-comment-ref
+on:
+  pull_request_review_comment:
+    types: [created]
+permissions:
+  contents: read
+jobs:
+  probe:
+    if: contains(github.event.comment.body, '@probe')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Probe workspace provenance
+        run: |
+          {
+            echo "event=$GITHUB_EVENT_NAME"
+            echo "ref=$GITHUB_REF"
+            echo "sha=$GITHUB_SHA"
+            echo "author_assoc=${{ github.event.comment.author_association }}"
+            echo "--- head of file ---"
+            cat .claude/hooks/no-pipe-test-output.sh
+            echo "--- marker file from PR? ---"
+            if [ -f from_pr_head.txt ]; then echo "MARKER_PRESENT: $(cat from_pr_head.txt)"; else echo "MARKER_ABSENT"; fi
+            echo "--- git log ---"
+            git log --oneline -5
+          } | tee out.txt
